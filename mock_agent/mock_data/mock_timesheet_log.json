@@ -1,0 +1,9 @@
+{
+  "machine_id": "WS-TECH-042",
+  "IP": "10.123.221.45",
+  "timestamp": "2026-04-18T17:30:00Z",
+  "timesheet_log": {
+    "check_in": "2026-04-17T08:00:00Z",
+    "check_out": "2026-04-17T19:00:00Z"
+  }
+}

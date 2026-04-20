@@ -1,0 +1,11 @@
+{
+  "machine_id": "WS-TECH-042",
+  "IP": "10.123.221.45",
+  "timestamp": "2026-04-18T17:30:00Z",
+  "netmind_healthcheck": {
+    "version": "v2.1.0",
+    "status": "Running",
+    "active_services": 4,
+    "last_ping": "2026-04-17T11:40:00Z"
+  }
+}
