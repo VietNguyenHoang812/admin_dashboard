@@ -1,0 +1,2 @@
+- get manual timesheet: get by date
+- post manual timesheet: checkin, checkout only have time, add date

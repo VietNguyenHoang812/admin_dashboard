@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     admin_username: str = "admin"
     admin_password: str = "admin123"
+    allowed_origins: str = "http://localhost:3000"
 
     class Config:
         env_file = ".env"

@@ -18,17 +18,22 @@ services:
       - redis_data:/data
 
   backend:
-    build: ./backend
+    image: admin-dashboard-backend:latest
     ports:
       - "8000:8000"
     env_file:
       - ./backend/.env
+    environment:
+      ENVIRONMENT: production
+      ALLOWED_ORIGINS: https://netmind.viettel.vn
     depends_on:
       - postgres
       - redis
 
   mock_agent:
-    build: ./mock_agent
+    profiles:
+      - dev
+    image: admin-dashboard-mock-agent:latest
     environment:
       - BACKEND_URL=http://backend:8000
     depends_on:

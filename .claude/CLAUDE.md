@@ -21,7 +21,7 @@ A monitoring and analytics dashboard for Viettel's internal infrastructure. Back
 
 ```bash
 # Start all services (PostgreSQL, Redis, backend)
-docker compose up -d
+docker compose up -d   
 
 # Frontend dev server
 cd frontend && pnpm install && pnpm dev
@@ -67,4 +67,7 @@ admin_dashboard/
 - `pnpm build` — production build
 - `pnpm test` — run tests
 - `pnpm lint` — lint code
-- `docker compose up -d` — start backend services
+- `docker build -t admin-dashboard-backend:latest ./backend` — build backend image
+- `docker build -t admin-dashboard-mock-agent:latest ./mock_agent` — build mock agent image
+- `docker compose --profile dev up -d` — start all services including mock agent (dev)
+- `docker compose up -d` — start services without mock agent (prod)
