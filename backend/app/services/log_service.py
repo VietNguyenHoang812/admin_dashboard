@@ -1,146 +1,180 @@
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.log import HealthcheckLog, TimesheetLog, TimesheetManualLog
+from app.models.log import (
+    HealthCheck, TokenUsage, LastActive,
+    TimesheetAutoLog, TimesheetManualLog,
+)
 from app.schemas.log import (
-    HealthcheckLogCreate, TimesheetLogCreate, TimesheetManualLogCreate,
-    MergedTimesheetRead, HealthcheckStats,
+    HealthCheckCreate, TokenUsageCreate, LastActiveCreate, NetclawStats,
+    TimesheetAutoCreate, TimesheetManualCreate, MergedTimesheetRead,
 )
 
 
-async def create_healthcheck_log(db: AsyncSession, data: HealthcheckLogCreate) -> HealthcheckLog:
-    hc = data.netmind_healthcheck
-    log = HealthcheckLog(
-        machine_id=data.machine_id,
-        ip=data.IP,
-        timestamp=data.timestamp,
-        version=hc.version if hc else None,
-        status=hc.status if hc else None,
-        active_services=hc.active_services if hc else None,
-        last_ping=hc.last_ping if hc else None,
-    )
-    db.add(log)
+# ── Netclaw Health Check ────────────────────────────────────────────────────
+
+async def create_health_check(db: AsyncSession, data: HealthCheckCreate) -> HealthCheck:
+    row = HealthCheck(**data.model_dump())
+    db.add(row)
     await db.commit()
-    await db.refresh(log)
-    return log
+    await db.refresh(row)
+    return row
 
 
-async def create_timesheet_log(db: AsyncSession, data: TimesheetLogCreate) -> TimesheetLog:
-    ts = data.timesheet_log
-    log = TimesheetLog(
-        machine_id=data.machine_id,
-        ip=data.IP,
-        timestamp=data.timestamp,
-        check_in=ts.check_in if ts else None,
-        check_out=ts.check_out if ts else None,
-    )
-    db.add(log)
-    await db.commit()
-    await db.refresh(log)
-    return log
-
-
-async def create_timesheet_manual_log(db: AsyncSession, data: TimesheetManualLogCreate) -> TimesheetManualLog:
-    ts = data.timesheet_log
-    log = TimesheetManualLog(
-        username=data.username,
-        timestamp=data.timestamp,
-        check_in=ts.check_in if ts else None,
-        check_out=ts.check_out if ts else None,
-        work_content=ts.work_content if ts else None,
-    )
-    db.add(log)
-    await db.commit()
-    await db.refresh(log)
-    return log
-
-
-async def get_healthcheck_logs(db: AsyncSession, limit: int = 50) -> list[HealthcheckLog]:
+async def get_health_checks(db: AsyncSession, limit: int = 50) -> list[HealthCheck]:
     result = await db.execute(
-        select(HealthcheckLog).order_by(HealthcheckLog.received_at.desc()).limit(limit)
+        select(HealthCheck).order_by(HealthCheck.created_at.desc()).limit(limit)
     )
     return list(result.scalars().all())
 
 
-async def get_timesheet_logs(db: AsyncSession, limit: int = 50) -> list[TimesheetLog]:
+# ── Token Usage ─────────────────────────────────────────────────────────────
+
+async def create_token_usage(db: AsyncSession, data: TokenUsageCreate) -> TokenUsage:
+    row = TokenUsage(**data.model_dump())
+    db.add(row)
+    await db.commit()
+    await db.refresh(row)
+    return row
+
+
+async def get_token_usages(db: AsyncSession, limit: int = 50) -> list[TokenUsage]:
     result = await db.execute(
-        select(TimesheetLog).order_by(TimesheetLog.received_at.desc()).limit(limit)
+        select(TokenUsage).order_by(TokenUsage.usage_date.desc(), TokenUsage.id.desc()).limit(limit)
     )
     return list(result.scalars().all())
 
 
-async def get_timesheet_manual_logs(db: AsyncSession, limit: int = 50) -> list[TimesheetManualLog]:
+# ── Last Active ─────────────────────────────────────────────────────────────
+
+async def upsert_last_active(db: AsyncSession, data: LastActiveCreate) -> LastActive:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    stmt = (
+        pg_insert(LastActive)
+        .values(pc_name=data.pc_name, last_active_at=now)
+        .on_conflict_do_update(
+            index_elements=["pc_name"],
+            set_={"last_active_at": now},
+        )
+    )
+    await db.execute(stmt)
+    await db.commit()
+    result = await db.execute(select(LastActive).where(LastActive.pc_name == data.pc_name))
+    return result.scalar_one()
+
+
+async def get_last_actives(db: AsyncSession) -> list[LastActive]:
     result = await db.execute(
-        select(TimesheetManualLog).order_by(TimesheetManualLog.received_at.desc()).limit(limit)
+        select(LastActive).order_by(LastActive.last_active_at.desc())
     )
     return list(result.scalars().all())
 
+
+# ── Netclaw Stats ───────────────────────────────────────────────────────────
+
+async def get_netclaw_stats(db: AsyncSession) -> NetclawStats:
+    five_min_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=5)
+
+    total_r = await db.execute(select(text("COUNT(*)")).select_from(LastActive))
+    total = total_r.scalar() or 0
+
+    online_r = await db.execute(
+        select(text("COUNT(*)")).select_from(LastActive)
+        .where(LastActive.last_active_at >= five_min_ago)
+    )
+    running = online_r.scalar() or 0
+    stopped = total - running
+
+    day_sql = text("""
+        SELECT
+            TO_CHAR(created_at, 'Dy') AS day,
+            COUNT(*)                  AS count
+        FROM health_check
+        WHERE created_at >= NOW() - INTERVAL '7 days'
+        GROUP BY DATE(created_at), TO_CHAR(created_at, 'Dy')
+        ORDER BY DATE(created_at)
+    """)
+    day_rows = (await db.execute(day_sql)).mappings().all()
+
+    return NetclawStats(
+        total=total,
+        running=running,
+        degraded=0,
+        stopped=stopped,
+        by_day=[{"day": r["day"], "count": r["count"]} for r in day_rows],
+    )
+
+
+# ── Timesheet Auto ──────────────────────────────────────────────────────────
+
+async def create_timesheet_auto(db: AsyncSession, data: TimesheetAutoCreate) -> TimesheetAutoLog:
+    row = TimesheetAutoLog(**data.model_dump())
+    db.add(row)
+    await db.commit()
+    await db.refresh(row)
+    return row
+
+
+async def get_timesheet_auto(db: AsyncSession, limit: int = 50) -> list[TimesheetAutoLog]:
+    result = await db.execute(
+        select(TimesheetAutoLog).order_by(TimesheetAutoLog.received_at.desc()).limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+# ── Timesheet Manual ────────────────────────────────────────────────────────
+
+async def create_timesheet_manual(db: AsyncSession, data: TimesheetManualCreate) -> TimesheetManualLog:
+    row = TimesheetManualLog(**data.model_dump())
+    db.add(row)
+    await db.commit()
+    await db.refresh(row)
+    return row
+
+
+async def get_timesheet_manual(db: AsyncSession, limit: int = 50) -> list[TimesheetManualLog]:
+    result = await db.execute(
+        select(TimesheetManualLog).order_by(TimesheetManualLog.created_at.desc()).limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+# ── Merged Timesheet ────────────────────────────────────────────────────────
 
 async def get_merged_timesheets(db: AsyncSession, limit: int = 100) -> list[MergedTimesheetRead]:
-    """
-    Join timesheet_logs → employees (on ip) → timesheet_manual_logs (on username, same day).
-    Uses a LATERAL subquery to pick the most recent manual log per machine per day.
-    """
     sql = text("""
         SELECT
-            tl.id,
-            tl.machine_id,
-            tl.ip,
+            ta.id,
+            ta.machine_id,
+            ta.ip,
             e.username,
             e.usercode,
             e.name,
             e.department,
-            tl.check_in        AS ts_check_in,
-            tl.check_out       AS ts_check_out,
+            e.pc_name,
+            ta.check_in        AS auto_check_in,
+            ta.check_out       AS auto_check_out,
             tm.check_in        AS manual_check_in,
             tm.check_out       AS manual_check_out,
             tm.work_content,
-            tl.received_at
-        FROM timesheet_logs tl
-        LEFT JOIN employees e ON tl.ip = e.ip
+            ta.logged_date,
+            ta.received_at
+        FROM timesheet_auto_logs ta
+        LEFT JOIN employees e ON ta.ip = e.ip
         LEFT JOIN LATERAL (
             SELECT check_in, check_out, work_content
             FROM timesheet_manual_logs
             WHERE username = e.username
-              AND DATE(received_at AT TIME ZONE 'UTC') = DATE(tl.received_at AT TIME ZONE 'UTC')
-            ORDER BY received_at DESC
+              AND logged_date = ta.logged_date
+            ORDER BY created_at DESC
             LIMIT 1
         ) tm ON true
-        ORDER BY tl.received_at DESC
+        ORDER BY ta.received_at DESC
         LIMIT :limit
     """)
     result = await db.execute(sql, {"limit": limit})
     rows = result.mappings().all()
     return [MergedTimesheetRead(**dict(row)) for row in rows]
-
-
-async def get_healthcheck_stats(db: AsyncSession) -> HealthcheckStats:
-    sql = text("""
-        SELECT
-            COUNT(*)                                                        AS total,
-            COUNT(*) FILTER (WHERE status = 'Running')                     AS running,
-            COUNT(*) FILTER (WHERE status = 'Degraded')                    AS degraded,
-            COUNT(*) FILTER (WHERE status = 'Stopped')                     AS stopped
-        FROM healthcheck_logs
-        WHERE received_at >= NOW() - INTERVAL '7 days'
-    """)
-    row = (await db.execute(sql)).mappings().one()
-
-    day_sql = text("""
-        SELECT
-            TO_CHAR(received_at AT TIME ZONE 'UTC', 'Dy') AS day,
-            COUNT(*)                                        AS count
-        FROM healthcheck_logs
-        WHERE received_at >= NOW() - INTERVAL '7 days'
-        GROUP BY DATE(received_at AT TIME ZONE 'UTC'), TO_CHAR(received_at AT TIME ZONE 'UTC', 'Dy')
-        ORDER BY DATE(received_at AT TIME ZONE 'UTC')
-    """)
-    day_rows = (await db.execute(day_sql)).mappings().all()
-
-    return HealthcheckStats(
-        total=row["total"],
-        running=row["running"],
-        degraded=row["degraded"],
-        stopped=row["stopped"],
-        by_day=[{"day": r["day"], "count": r["count"]} for r in day_rows],
-    )

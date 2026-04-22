@@ -1,15 +1,16 @@
 import asyncio
 import os
 import random
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, date
 
 import httpx
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 INTERVAL_SECONDS = 5
 
-HC_STATUSES = ["Running", "Degraded", "Stopped"]
-WORK_CONTENTS = [
+HEALTH_RESULTS = ["OK", "OK", "OK", "WARNING", "ERROR"]  # weighted toward OK
+TS_STATUSES    = ["present", "late", "absent"]
+WORK_CONTENTS  = [
     "Họp cả ngày, không làm được gì cả.",
     "Fix bug hệ thống giám sát.",
     "Review code và deploy lên staging.",
@@ -18,9 +19,9 @@ WORK_CONTENTS = [
 ]
 
 FALLBACK_MACHINES = [
-    {"machine_id": "WS-TECH-042", "IP": "10.123.221.45"},
-    {"machine_id": "WS-TECH-055", "IP": "10.123.221.60"},
-    {"machine_id": "WS-DEV-011",  "IP": "10.123.222.11"},
+    {"pc_name": "WS-TECH-042", "ip": "10.123.221.45"},
+    {"pc_name": "WS-TECH-055", "ip": "10.123.221.60"},
+    {"pc_name": "WS-DEV-011",  "ip": "10.123.222.11"},
 ]
 FALLBACK_USERS = ["vietnh41", "admin", "devuser01", "devuser02"]
 
@@ -34,10 +35,10 @@ async def load_staff(client: httpx.AsyncClient) -> tuple[list[dict], list[str]]:
             raise ValueError("empty list")
 
         machines = [
-            {"machine_id": f"WS-{e['usercode']}", "IP": e["ip"] or "10.0.0.1"}
+            {"pc_name": e["pc_name"] or f"WS-{e['usercode']}", "ip": e["ip"] or "10.0.0.1"}
             for e in employees if e.get("ip")
         ]
-        usernames = [e["username"] for e in employees]
+        usernames = [e["username"] for e in employees if e.get("username")]
 
         if not machines:
             machines = FALLBACK_MACHINES
@@ -52,54 +53,58 @@ async def load_staff(client: httpx.AsyncClient) -> tuple[list[dict], list[str]]:
 
 
 def today_str() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return date.today().isoformat()
 
 
-def random_datetime_today(hour_start=8, hour_end=19) -> str:
-    base = datetime.now(timezone.utc).replace(hour=hour_start, minute=0, second=0, microsecond=0)
-    offset = random.randint(0, (hour_end - hour_start) * 3600)
-    return (base + timedelta(seconds=offset)).isoformat()
+def random_time(hour_start: int, hour_end: int) -> str:
+    total_minutes = (hour_end - hour_start) * 60
+    offset = random.randint(0, total_minutes)
+    h = hour_start + offset // 60
+    m = offset % 60
+    return f"{h:02d}:{m:02d}"
 
 
-def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def make_healthcheck(machine: dict) -> dict:
+def make_health_check(machine: dict) -> dict:
     return {
-        "machine_id": machine["machine_id"],
-        "IP": machine["IP"],
-        "timestamp": now_iso(),
-        "netmind_healthcheck": {
-            "version": "v2.1.0",
-            "status": random.choice(HC_STATUSES),
-            "active_services": random.randint(1, 6),
-            "last_ping": now_iso(),
-        },
+        "pc_name": machine["pc_name"],
+        "health_result": random.choice(HEALTH_RESULTS),
     }
 
 
-def make_timesheet(machine: dict) -> dict:
+def make_token_usage(machine: dict) -> dict:
+    input_tokens  = random.randint(100, 2000)
+    output_tokens = random.randint(50, 1000)
     return {
-        "machine_id": machine["machine_id"],
-        "IP": machine["IP"],
-        "timestamp": now_iso(),
-        "timesheet_log": {
-            "check_in": random_datetime_today(7, 9),
-            "check_out": random_datetime_today(17, 20),
-        },
+        "pc_name":       machine["pc_name"],
+        "input_tokens":  input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens":  input_tokens + output_tokens,
+    }
+
+
+def make_last_active(machine: dict) -> dict:
+    return {"pc_name": machine["pc_name"]}
+
+
+def make_timesheet_auto(machine: dict) -> dict:
+    return {
+        "machine_id": machine["pc_name"],
+        "ip":         machine["ip"],
+        "check_in":   random_time(7, 9),
+        "check_out":  random_time(17, 20),
+        "logged_date": today_str(),
+        "status":     random.choice(TS_STATUSES),
     }
 
 
 def make_timesheet_manual(username: str) -> dict:
     return {
-        "username": username,
-        "timestamp": now_iso(),
-        "timesheet_log": {
-            "check_in": random_datetime_today(7, 9),
-            "check_out": random_datetime_today(17, 20),
-            "work_content": random.choice(WORK_CONTENTS),
-        },
+        "username":     username,
+        "check_in":     random_time(7, 9),
+        "check_out":    random_time(17, 20),
+        "logged_date":  today_str(),
+        "status":       random.choice(TS_STATUSES),
+        "work_content": random.choice(WORK_CONTENTS),
     }
 
 
@@ -115,7 +120,6 @@ async def post(client: httpx.AsyncClient, path: str, payload: dict, label: str):
 async def main():
     print(f"Mock agent started — pushing every {INTERVAL_SECONDS}s to {BACKEND_URL}")
     async with httpx.AsyncClient(timeout=10) as client:
-        # wait for backend to be ready
         for _ in range(10):
             try:
                 await client.get(f"{BACKEND_URL}/health")
@@ -126,15 +130,14 @@ async def main():
 
         machines, usernames = await load_staff(client)
 
-        current_day = today_str()
-        ts_done: set[str] = set()      # machine_ids that logged timesheet today
-        manual_done: set[str] = set()  # usernames that logged manual today
+        current_day  = today_str()
+        ts_done:     set[str] = set()   # pc_names with auto timesheet today
+        manual_done: set[str] = set()   # usernames with manual timesheet today
         tick = 0
 
         while True:
             day = today_str()
 
-            # Reset daily sets at midnight
             if day != current_day:
                 print(f"[INFO] New day {day} — resetting daily logs")
                 current_day = day
@@ -143,27 +146,34 @@ async def main():
 
             print(f"\n--- {datetime.now(timezone.utc).strftime('%H:%M:%S')} ---")
 
-            # Healthcheck every tick
+            # Netclaw health + last-active every tick
             for machine in machines:
-                await post(client, "/api/v1/logs/healthcheck", make_healthcheck(machine),
-                           f"healthcheck {machine['machine_id']}")
+                await post(client, "/api/v1/netclaw/health-check",
+                           make_health_check(machine), f"health-check {machine['pc_name']}")
+                await post(client, "/api/v1/netclaw/last-active",
+                           make_last_active(machine),  f"last-active  {machine['pc_name']}")
 
-            # Timesheet: once per machine per day
+            # Token usage: once per machine per day
             for machine in machines:
-                if machine["machine_id"] not in ts_done:
-                    await post(client, "/api/v1/logs/timesheet", make_timesheet(machine),
-                               f"timesheet   {machine['machine_id']}")
-                    ts_done.add(machine["machine_id"])
+                if machine["pc_name"] not in ts_done:
+                    await post(client, "/api/v1/netclaw/token-usage",
+                               make_token_usage(machine), f"token-usage  {machine['pc_name']}")
+
+            # Auto timesheet: once per machine per day
+            for machine in machines:
+                if machine["pc_name"] not in ts_done:
+                    await post(client, "/api/v1/logs/timesheet/auto",
+                               make_timesheet_auto(machine), f"ts-auto      {machine['pc_name']}")
+                    ts_done.add(machine["pc_name"])
 
             # Manual timesheet: once per user per day
             for user in usernames:
                 if user not in manual_done:
-                    await post(client, "/api/v1/logs/timesheet/manual", make_timesheet_manual(user),
-                               f"manual      {user}")
+                    await post(client, "/api/v1/logs/timesheet/manual",
+                               make_timesheet_manual(user), f"ts-manual    {user}")
                     manual_done.add(user)
 
             tick += 1
-            # Reload staff every 60 ticks (~5 min)
             if tick % 60 == 0:
                 machines, usernames = await load_staff(client)
 

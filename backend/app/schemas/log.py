@@ -1,90 +1,115 @@
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel
 
 
-class NetmindHealthcheck(BaseModel):
-    version: str | None = None
-    status: str | None = None
-    active_services: int | None = None
-    last_ping: datetime | None = None
+# ── Netclaw Health Check ────────────────────────────────────────────────────
+
+class HealthCheckCreate(BaseModel):
+    pc_name: str
+    health_result: str
 
 
-class HealthcheckLogCreate(BaseModel):
-    machine_id: str
-    IP: str
-    timestamp: datetime
-    netmind_healthcheck: NetmindHealthcheck | None = None
-
-
-class HealthcheckLogRead(BaseModel):
+class HealthCheckRead(BaseModel):
     id: int
-    machine_id: str
-    ip: str
-    version: str | None
-    status: str | None
-    active_services: int | None
-    last_ping: datetime | None
-    timestamp: datetime
-    received_at: datetime
+    pc_name: str
+    health_result: str
+    created_at: datetime
 
     model_config = {"from_attributes": True}
 
 
-class TimesheetEntry(BaseModel):
-    check_in: datetime | None = None
-    check_out: datetime | None = None
+# ── Token Usage ─────────────────────────────────────────────────────────────
+
+class TokenUsageCreate(BaseModel):
+    pc_name: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
 
 
-class TimesheetLogCreate(BaseModel):
-    machine_id: str
-    IP: str
-    timestamp: datetime
-    timesheet_log: TimesheetEntry | None = None
-
-
-class TimesheetLogRead(BaseModel):
+class TokenUsageRead(BaseModel):
     id: int
-    machine_id: str
-    ip: str
-    check_in: datetime | None
-    check_out: datetime | None
-    timestamp: datetime
-    received_at: datetime
+    pc_name: str
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    usage_date: date
 
     model_config = {"from_attributes": True}
 
 
-class TimesheetManualEntry(BaseModel):
-    check_in: datetime | None = None
-    check_out: datetime | None = None
-    work_content: str | None = None
+# ── Last Active ─────────────────────────────────────────────────────────────
+
+class LastActiveCreate(BaseModel):
+    pc_name: str
 
 
-class TimesheetManualLogCreate(BaseModel):
-    username: str
-    timestamp: datetime
-    timesheet_log: TimesheetManualEntry | None = None
-
-
-class TimesheetManualLogRead(BaseModel):
-    id: int
-    username: str
-    check_in: datetime | None
-    check_out: datetime | None
-    work_content: str | None
-    timestamp: datetime
-    received_at: datetime
+class LastActiveRead(BaseModel):
+    pc_name: str
+    last_active_at: datetime
 
     model_config = {"from_attributes": True}
 
 
-class HealthcheckStats(BaseModel):
+# ── Netclaw Stats (dashboard) ───────────────────────────────────────────────
+
+class NetclawStats(BaseModel):
     total: int
     running: int
     degraded: int
     stopped: int
-    by_day: list[dict]  # [{day, count}]
+    by_day: list[dict]
 
+
+# ── Timesheet Auto ──────────────────────────────────────────────────────────
+
+class TimesheetAutoCreate(BaseModel):
+    machine_id: str
+    ip: str
+    check_in: str | None = None
+    check_out: str | None = None
+    logged_date: str
+    status: str | None = None
+
+
+class TimesheetAutoRead(BaseModel):
+    id: int
+    machine_id: str
+    ip: str
+    check_in: str | None
+    check_out: str | None
+    logged_date: str
+    status: str | None
+    received_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ── Timesheet Manual ────────────────────────────────────────────────────────
+
+class TimesheetManualCreate(BaseModel):
+    username: str
+    check_in: str
+    check_out: str
+    logged_date: str
+    status: str
+    work_content: str | None = None
+
+
+class TimesheetManualRead(BaseModel):
+    id: int
+    username: str
+    check_in: str
+    check_out: str
+    logged_date: str
+    status: str
+    work_content: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ── Merged Timesheet ────────────────────────────────────────────────────────
 
 class MergedTimesheetRead(BaseModel):
     id: int
@@ -94,9 +119,11 @@ class MergedTimesheetRead(BaseModel):
     usercode: str | None
     name: str | None
     department: str | None
-    ts_check_in: datetime | None
-    ts_check_out: datetime | None
-    manual_check_in: datetime | None
-    manual_check_out: datetime | None
+    pc_name: str | None
+    auto_check_in: str | None
+    auto_check_out: str | None
+    manual_check_in: str | None
+    manual_check_out: str | None
     work_content: str | None
+    logged_date: str
     received_at: datetime

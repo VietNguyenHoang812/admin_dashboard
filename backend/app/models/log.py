@@ -1,43 +1,58 @@
-from datetime import datetime
-from sqlalchemy import String, DateTime, Integer, Text, func
+from datetime import datetime, date
+from sqlalchemy import Text, Integer, Date, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 
 
-class HealthcheckLog(Base):
-    __tablename__ = "healthcheck_logs"
+class HealthCheck(Base):
+    __tablename__ = "health_check"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    machine_id: Mapped[str] = mapped_column(String(100), index=True)
-    ip: Mapped[str] = mapped_column(String(45))
-    version: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    status: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    active_services: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    last_ping: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
-    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    pc_name: Mapped[str] = mapped_column(Text, index=True)
+    health_result: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now(), index=True)
 
 
-class TimesheetLog(Base):
-    __tablename__ = "timesheet_logs"
+class TokenUsage(Base):
+    __tablename__ = "token_usage"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    machine_id: Mapped[str] = mapped_column(String(100), index=True)
-    ip: Mapped[str] = mapped_column(String(45))
-    check_in: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    check_out: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
-    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    pc_name: Mapped[str] = mapped_column(Text, index=True)
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    total_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    usage_date: Mapped[date] = mapped_column(Date, index=True, server_default=func.current_date())
+
+
+class LastActive(Base):
+    __tablename__ = "last_active"
+
+    pc_name: Mapped[str] = mapped_column(Text, primary_key=True)
+    last_active_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class TimesheetAutoLog(Base):
+    __tablename__ = "timesheet_auto_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    machine_id: Mapped[str] = mapped_column(Text, index=True)
+    ip: Mapped[str] = mapped_column(Text)
+    check_in: Mapped[str | None] = mapped_column(Text, nullable=True)
+    check_out: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logged_date: Mapped[str] = mapped_column(Text, index=True)
+    status: Mapped[str | None] = mapped_column(Text, nullable=True)
+    received_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
 class TimesheetManualLog(Base):
     __tablename__ = "timesheet_manual_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(100), index=True)
-    check_in: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    check_out: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    username: Mapped[str] = mapped_column(Text, index=True)
+    check_in: Mapped[str] = mapped_column(Text)
+    check_out: Mapped[str] = mapped_column(Text)
+    logged_date: Mapped[str] = mapped_column(Text, index=True)
+    status: Mapped[str] = mapped_column(Text)
     work_content: Mapped[str | None] = mapped_column(Text, nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
-    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())

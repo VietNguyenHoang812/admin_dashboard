@@ -23,7 +23,12 @@ class TokenResponse(BaseModel):
     username: str
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Login",
+    description="Authenticate with admin credentials. Returns a JWT bearer token valid for **8 hours**.",
+)
 async def login(req: LoginRequest):
     if req.username != settings.admin_username or req.password != settings.admin_password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
