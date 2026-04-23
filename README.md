@@ -1,6 +1,6 @@
-# Viettel Admin Dashboard
+# Admin Dashboard
 
-A monitoring and analytics dashboard for Viettel's internal infrastructure. Background agents running on company PCs push logs to the backend. The frontend visualizes this data in real time and supports exporting reports.
+A monitoring and analytics dashboard for internal infrastructure. Background agents running on company PCs push logs to the backend. The frontend visualizes this data in real time and supports exporting reports.
 
 ---
 

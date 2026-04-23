@@ -44,7 +44,7 @@ List all employees, optionally filtered by a search term.
   "usercode": "NV001",
   "department": "P. TTNT",
   "ip": "10.221.2.82",
-  "pc_name": "VTN-DUONGLT18",
+  "pc_name": "WS-DUONGLT18",
   "created_at": "2024-01-01T00:00:00"
 }]
 ```
@@ -62,7 +62,7 @@ Bulk-import employees from a parsed Excel file. Matches the columns in `test_dat
   "usercode": "NV001",
   "department": "P. TTNT",
   "ip": "10.221.2.82",
-  "pc_name": "VTN-DUONGLT18"
+  "pc_name": "WS-DUONGLT18"
 }]
 ```
 
@@ -92,7 +92,7 @@ Update a single employee. All fields are optional; only supplied fields are chan
   "usercode": "NV001",
   "department": "P. TTNT",
   "ip": "10.221.2.82",
-  "pc_name": "VTN-DUONGLT18"
+  "pc_name": "WS-DUONGLT18"
 }
 ```
 
@@ -121,7 +121,7 @@ PC agent pushes a health check result.
 **Request body** — `HealthCheckCreate`
 ```json
 {
-  "pc_name": "VTN-DUONGLT18",
+  "pc_name": "WS-DUONGLT18",
   "health_result": "OK"
 }
 ```
@@ -135,7 +135,7 @@ PC agent pushes a health check result.
 ```json
 {
   "id": 1,
-  "pc_name": "VTN-DUONGLT18",
+  "pc_name": "WS-DUONGLT18",
   "health_result": "OK",
   "created_at": "2024-01-15T08:30:00"
 }
@@ -158,7 +158,7 @@ PC agent reports token consumption for the current session.
 **Request body** — `TokenUsageCreate`
 ```json
 {
-  "pc_name": "VTN-DUONGLT18",
+  "pc_name": "WS-DUONGLT18",
   "input_tokens": 500,
   "output_tokens": 200,
   "total_tokens": 700
@@ -169,7 +169,7 @@ PC agent reports token consumption for the current session.
 ```json
 {
   "id": 1,
-  "pc_name": "VTN-DUONGLT18",
+  "pc_name": "WS-DUONGLT18",
   "input_tokens": 500,
   "output_tokens": 200,
   "total_tokens": 700,
@@ -193,13 +193,13 @@ Upsert the last-seen timestamp for a PC. Creates on first call, updates `last_ac
 
 **Request body** — `LastActiveCreate`
 ```json
-{ "pc_name": "VTN-DUONGLT18" }
+{ "pc_name": "WS-DUONGLT18" }
 ```
 
 **Response `201`** — `LastActiveRead`
 ```json
 {
-  "pc_name": "VTN-DUONGLT18",
+  "pc_name": "WS-DUONGLT18",
   "last_active_at": "2024-01-15T08:30:00"
 }
 ```
@@ -244,7 +244,7 @@ PC agent pushes an automatic check-in / check-out record.
 **Request body** — `TimesheetAutoCreate`
 ```json
 {
-  "machine_id": "VTN-DUONGLT18",
+  "machine_id": "WS-DUONGLT18",
   "ip": "10.221.2.82",
   "check_in": "08:12",
   "check_out": "17:45",
@@ -279,7 +279,7 @@ List recent automatic timesheet records.
 ```json
 [{
   "id": 1,
-  "machine_id": "VTN-DUONGLT18",
+  "machine_id": "WS-DUONGLT18",
   "ip": "10.221.2.82",
   "check_in": "08:12",
   "check_out": "17:45",
@@ -361,13 +361,13 @@ Joins `timesheet_auto_logs` with `employees` and the most recent `timesheet_manu
 ```json
 [{
   "id": 1,
-  "machine_id": "VTN-DUONGLT18",
+  "machine_id": "WS-DUONGLT18",
   "ip": "10.221.2.82",
   "username": "duonglt18",
   "usercode": "NV001",
   "name": "Lê Tùng Dương",
   "department": "P. TTNT",
-  "pc_name": "VTN-DUONGLT18",
+  "pc_name": "WS-DUONGLT18",
   "auto_check_in": "08:12",
   "auto_check_out": "17:45",
   "manual_check_in": "08:05",

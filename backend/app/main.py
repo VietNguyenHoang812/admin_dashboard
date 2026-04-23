@@ -9,7 +9,7 @@ import app.models.log       # noqa: F401  (registers HealthCheck, TokenUsage, La
 import app.models.employee  # noqa: F401
 
 _DESCRIPTION = """
-Admin Dashboard API for Viettel's internal infrastructure monitoring.
+Admin Dashboard API for internal infrastructure monitoring.
 
 Background agents running on company PCs push system data to this API.
 The frontend consumes these endpoints to visualize live status and generate reports.
@@ -45,8 +45,8 @@ app = FastAPI(
     description=_DESCRIPTION,
     openapi_tags=_TAGS_METADATA,
     contact={
-        "name": "Viettel Infrastructure Team",
-        "email": "admin@viettel.com.vn",
+        "name": "Infrastructure Team",
+        "email": "admin@example.com",
     },
     lifespan=lifespan,
 )

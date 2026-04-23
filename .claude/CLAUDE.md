@@ -1,7 +1,7 @@
 # Admin Dashboard
 
 ## Project Overview
-A monitoring and analytics dashboard for Viettel's internal infrastructure. Background agents running on company PCs push system data to the backend. The frontend visualizes this data in real time and supports exporting reports.
+A monitoring and analytics dashboard for internal infrastructure. Background agents running on company PCs push system data to the backend. The frontend visualizes this data in real time and supports exporting reports.
 
 **Key flows:**
 1. **Data ingestion** — background jobs on each PC push metrics/status to the backend API
