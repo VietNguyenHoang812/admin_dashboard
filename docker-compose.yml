@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: admin_dashboard
     ports:
-      - "5432:5432"
+      - "9122:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -15,11 +15,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - netclaw
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -27,11 +27,13 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - netclaw
 
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
+      - "9900:8000"
     env_file:
       - ./backend/.env
     depends_on:
@@ -39,17 +41,21 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - netclaw
 
   frontend:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_API_URL: http://localhost:9900
         NEXT_PUBLIC_BASE_PATH: ""
     ports:
-      - "3000:3000"
+      - "9121:3000"
     depends_on:
       - backend
+    networks:
+      - netclaw
 
   mock_agent:
     build: ./mock_agent
@@ -58,7 +64,13 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - netclaw
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  netclaw:
+    driver: bridge
