@@ -1,8 +1,8 @@
 # Admin Dashboard API Reference
 
-Base URL: `http://localhost:8000/api/v1`  
-Interactive docs (Swagger UI): `http://localhost:8000/docs`  
-Alternative docs (ReDoc): `http://localhost:8000/redoc`
+Base URL: `http://0.0.0.0:8000/api/v1`  
+Interactive docs (Swagger UI): `http://0.0.0.0:8000/docs`  
+Alternative docs (ReDoc): `http://0.0.0.0:8000/redoc`
 
 ---
 
@@ -385,7 +385,7 @@ Joins `timesheet_auto_logs` with `employees` and the most recent `timesheet_manu
 ### GET `/health`
 Root-level liveness check. No `/api/v1` prefix.
 
-URL: `http://localhost:8000/health`
+URL: `http://0.0.0.0:8000/health`
 
 **Response `200`**
 ```json

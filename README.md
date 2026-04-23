@@ -112,7 +112,7 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://0.0.0.0:3000](http://0.0.0.0:3000).
 
 ### 3. (Optional) Run backend without Docker
 
@@ -140,7 +140,7 @@ uvicorn app.main:app --reload
 | GET | `/api/v1/reports/export/csv` | Export metrics as CSV (`?hostname=X`) |
 | GET | `/health` | Health check |
 
-Interactive API docs available at [http://localhost:8000/docs](http://localhost:8000/docs).
+Interactive API docs available at [http://0.0.0.0:8000/docs](http://0.0.0.0:8000/docs).
 
 ---
 

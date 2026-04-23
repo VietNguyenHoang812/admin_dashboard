@@ -5,7 +5,7 @@ from datetime import datetime, timezone, date
 
 import httpx
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://0.0.0.0:8000")
 INTERVAL_SECONDS = 5
 
 HEALTH_RESULTS = ["OK", "OK", "OK", "WARNING", "ERROR"]  # weighted toward OK
