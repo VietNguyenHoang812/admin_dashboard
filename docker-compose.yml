@@ -31,7 +31,10 @@ services:
       - netclaw
 
   backend:
-    build: ./backend
+    image: vietthevarious/netclaw_admin_dashboard_backend:1.0.0
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "9900:8000"
     env_file:
@@ -45,11 +48,14 @@ services:
       - netclaw
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:9900
-        NEXT_PUBLIC_BASE_PATH: ""
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm dev"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:9900
+      - CI=true
     ports:
       - "9121:3000"
     depends_on:
