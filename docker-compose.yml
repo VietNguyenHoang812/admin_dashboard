@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: admin_dashboard
     ports:
-      - "9122:5432"
+      - "9123:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -36,7 +36,7 @@ services:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "9902:8000"
+      - "9122:8000"
     env_file:
       - ./backend/.env
     depends_on:
@@ -48,14 +48,7 @@ services:
       - netclaw
 
   frontend:
-    image: node:20-alpine
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: sh -c "npm install -g pnpm && pnpm install && pnpm dev"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:9902
-      - CI=true
+    image: vietthevarious/netclaw_admin_dashboard-frontend:1.0.0
     ports:
       - "9121:3000"
     depends_on:
@@ -79,4 +72,5 @@ volumes:
 
 networks:
   netclaw:
-    driver: bridge
+    external: true
+    name: grafana_netmind_netmind-grafana
