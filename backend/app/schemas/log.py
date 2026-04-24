@@ -112,9 +112,9 @@ class TimesheetManualRead(BaseModel):
 # ── Merged Timesheet ────────────────────────────────────────────────────────
 
 class MergedTimesheetRead(BaseModel):
-    id: int
-    machine_id: str
-    ip: str
+    id: int | None
+    machine_id: str | None
+    ip: str | None
     username: str | None
     usercode: str | None
     name: str | None

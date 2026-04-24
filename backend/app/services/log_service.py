@@ -172,7 +172,36 @@ async def get_merged_timesheets(db: AsyncSession, limit: int = 100) -> list[Merg
             ORDER BY created_at DESC
             LIMIT 1
         ) tm ON true
-        ORDER BY ta.received_at DESC
+
+        UNION ALL
+
+        SELECT
+            NULL               AS id,
+            NULL               AS machine_id,
+            e2.ip,
+            e2.username,
+            e2.usercode,
+            e2.name,
+            e2.department,
+            e2.hostname,
+            NULL               AS auto_check_in,
+            NULL               AS auto_check_out,
+            mo.check_in        AS manual_check_in,
+            mo.check_out       AS manual_check_out,
+            mo.work_content,
+            mo.logged_date,
+            mo.created_at      AS received_at
+        FROM timesheet_manual_logs mo
+        JOIN employees e2 ON mo.username = e2.username
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM timesheet_auto_logs ta2
+            JOIN employees ex ON ta2.ip = ex.ip
+            WHERE ex.username = mo.username
+              AND ta2.logged_date = mo.logged_date
+        )
+
+        ORDER BY received_at DESC
         LIMIT :limit
     """)
     result = await db.execute(sql, {"limit": limit})
