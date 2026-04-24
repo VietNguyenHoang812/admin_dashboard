@@ -154,7 +154,7 @@ async def get_merged_timesheets(db: AsyncSession, limit: int = 100) -> list[Merg
             e.usercode,
             e.name,
             e.department,
-            e.pc_name,
+            e.hostname,
             ta.check_in        AS auto_check_in,
             ta.check_out       AS auto_check_out,
             tm.check_in        AS manual_check_in,

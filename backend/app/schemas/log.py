@@ -119,7 +119,7 @@ class MergedTimesheetRead(BaseModel):
     usercode: str | None
     name: str | None
     department: str | None
-    pc_name: str | None
+    hostname: str | None
     auto_check_in: str | None
     auto_check_out: str | None
     manual_check_in: str | None

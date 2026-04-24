@@ -8,7 +8,7 @@ class EmployeeCreate(BaseModel):
     usercode: str
     department: str | None = None
     ip: str | None = None
-    pc_name: str | None = None
+    hostname: str | None = None
 
 
 class EmployeeUpdate(BaseModel):
@@ -16,7 +16,7 @@ class EmployeeUpdate(BaseModel):
     usercode: str | None = None
     department: str | None = None
     ip: str | None = None
-    pc_name: str | None = None
+    hostname: str | None = None
 
 
 class EmployeeRead(BaseModel):
@@ -25,7 +25,7 @@ class EmployeeRead(BaseModel):
     usercode: str
     department: str | None
     ip: str | None
-    pc_name: str | None
+    hostname: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}

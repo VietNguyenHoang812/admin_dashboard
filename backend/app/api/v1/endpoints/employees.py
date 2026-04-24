@@ -17,7 +17,7 @@ router = APIRouter()
     summary="List employees",
     description=(
         "Return all employees ordered by name. "
-        "Pass `search` to filter across `name`, `username`, `usercode`, `department`, `ip`, and `pc_name`."
+        "Pass `search` to filter across `name`, `username`, `usercode`, `department`, `ip`, and `hostname`."
     ),
 )
 async def list_employees(

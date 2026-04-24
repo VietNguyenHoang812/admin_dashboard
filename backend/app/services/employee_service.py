@@ -16,7 +16,7 @@ async def get_all_employees(db: AsyncSession, search: str | None = None) -> list
                 Employee.username.ilike(term),
                 Employee.department.ilike(term),
                 Employee.ip.ilike(term),
-                Employee.pc_name.ilike(term),
+                Employee.hostname.ilike(term),
             )
         )
     result = await db.execute(q)
