@@ -1,8 +1,9 @@
 {
   "username": "vietnh41",
-  "check_in": "08:05",
-  "check_out": "17:30",
-  "logged_date": "22-04-2026",
+  "check_in": "08:00",
+  "check_out": "20:00",
+  "logged_date": "2026-04-28",
   "status": "present",
-  "work_content": "Họp cả ngày, không làm được gì cả."
+  "work_content": "alo",
+  "work_content_ot": "ola"
 }

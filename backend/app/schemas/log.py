@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ── Netclaw Health Check ────────────────────────────────────────────────────
@@ -96,13 +96,15 @@ class TimesheetAutoRead(BaseModel):
 # ── Timesheet Manual ────────────────────────────────────────────────────────
 
 class TimesheetManualCreate(BaseModel):
+    model_config = {"extra": "ignore", "populate_by_name": True}
+
     username: str
     check_in: str
     check_out: str
     logged_date: str
     status: str
-    office_hour_work: str | None = None
-    ot_work: str | None = None
+    office_hour_work: str | None = Field(None, alias="work_content")
+    ot_work: str | None = Field(None, alias="work_content_ot")
 
 
 class TimesheetManualRead(BaseModel):

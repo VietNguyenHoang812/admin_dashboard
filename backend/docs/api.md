@@ -305,7 +305,7 @@ List recent automatic timesheet records.
 ## Timesheet — Manual (user-submitted)
 
 ### POST `/logs/timesheet/manual`
-User submits a manual timesheet entry with optional work content.
+User submits a manual timesheet entry with optional work content. Unknown extra fields are silently ignored.
 
 **Request body** — `TimesheetManualCreate`
 ```json
@@ -315,18 +315,20 @@ User submits a manual timesheet entry with optional work content.
   "check_out": "17:30",
   "logged_date": "2024-01-15",
   "status": "present",
-  "work_content": "Fix bug hệ thống giám sát."
+  "work_content": "Fix bug hệ thống giám sát.",
+  "work_content_ot": "Deploy extra feature."
 }
 ```
 
-| Field | Type | Required |
-|---|---|---|
-| `username` | string | **yes** |
-| `check_in` | string | **yes** — `HH:MM` |
-| `check_out` | string | **yes** — `HH:MM` |
-| `logged_date` | string | **yes** — `YYYY-MM-DD` |
-| `status` | string | **yes** — `present` \| `late` \| `absent` |
-| `work_content` | string | no |
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `username` | string | **yes** | |
+| `check_in` | string | **yes** | `HH:MM` |
+| `check_out` | string | **yes** | `HH:MM` |
+| `logged_date` | string | **yes** | `YYYY-MM-DD` |
+| `status` | string | **yes** | `present` \| `late` \| `absent` |
+| `work_content` | string | no | Stored as `office_hour_work` |
+| `work_content_ot` | string | no | Stored as `ot_work` |
 
 **Response `200`** — `TimesheetManualRead`
 
@@ -350,7 +352,8 @@ List recent manual timesheet entries.
   "check_out": "17:30",
   "logged_date": "2024-01-15",
   "status": "present",
-  "work_content": "Fix bug hệ thống giám sát.",
+  "office_hour_work": "Fix bug hệ thống giám sát.",
+  "ot_work": "Deploy extra feature.",
   "created_at": "2024-01-15T08:05:10"
 }]
 ```
@@ -388,7 +391,8 @@ Returns a unified view of timesheet data per employee per day, merging auto logs
   "auto_check_out": "17:45",
   "manual_check_in": "08:05",
   "manual_check_out": "17:30",
-  "work_content": "Fix bug hệ thống giám sát.",
+  "office_hour_work": "Fix bug hệ thống giám sát.",
+  "ot_work": "Deploy extra feature.",
   "logged_date": "2024-01-15",
   "received_at": "2024-01-15T08:06:20"
 }]
@@ -402,6 +406,8 @@ Returns a unified view of timesheet data per employee per day, merging auto logs
 | `hostname` | From the `employees` table |
 | `auto_check_in` / `auto_check_out` | Derived from agent events; `null` for manual-only rows |
 | `manual_check_in` / `manual_check_out` | From the most recent manual submission; `null` if none |
+| `office_hour_work` | Regular-hours work content from the manual log; `null` if none |
+| `ot_work` | Overtime work content from the manual log; `null` if none |
 | `logged_date` | The actual work date (`YYYY-MM-DD`) — use this for date filtering |
 
 ---
