@@ -63,19 +63,24 @@ class NetclawStats(BaseModel):
 
 # ── Timesheet Auto ──────────────────────────────────────────────────────────
 
+class TimesheetEvent(BaseModel):
+    type: str       # "startup" | "lock" | "unlock"
+    timestamp: str  # ISO 8601 with TZ offset
+
+
 class TimesheetAutoCreate(BaseModel):
-    machine_id: str
-    ip: str
-    check_in: str | None = None
-    check_out: str | None = None
-    logged_date: str
-    status: str | None = None
+    date: str
+    hostname: str
+    username: str
+    platform: str | None = None
+    events: list[TimesheetEvent]
 
 
 class TimesheetAutoRead(BaseModel):
     id: int
-    machine_id: str
-    ip: str
+    hostname: str
+    username: str | None
+    ip: str | None
     check_in: str | None
     check_out: str | None
     logged_date: str

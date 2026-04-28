@@ -1,8 +1,8 @@
 # Admin Dashboard API Reference
 
-Base URL: `http://0.0.0.0:8000/api/v1`  
-Interactive docs (Swagger UI): `http://0.0.0.0:8000/docs`  
-Alternative docs (ReDoc): `http://0.0.0.0:8000/redoc`
+Base URL (Docker): `http://localhost:9122/api/v1`  
+Interactive docs (Swagger UI): `http://localhost:9122/docs`  
+Alternative docs (ReDoc): `http://localhost:9122/redoc`
 
 ---
 
@@ -34,17 +34,17 @@ List all employees, optionally filtered by a search term.
 
 | Param | Type | Required | Description |
 |---|---|---|---|
-| `search` | string | no | Case-insensitive match against `name`, `username`, `usercode`, `department`, `ip`, `pc_name` |
+| `search` | string | no | Case-insensitive match against `name`, `username`, `usercode`, `department`, `ip`, `hostname` |
 
 **Response `200`** — `list[EmployeeRead]`
 ```json
 [{
-  "username": "duonglt18",
-  "name": "Lê Tùng Dương",
-  "usercode": "NV001",
+  "username": "vietnh41",
+  "name": "Nguyễn Hoàng Việt",
+  "usercode": "293048",
   "department": "P. TTNT",
-  "ip": "10.221.2.82",
-  "pc_name": "WS-DUONGLT18",
+  "ip": "10.221.2.91",
+  "hostname": "VTN-VIETNH41",
   "created_at": "2024-01-01T00:00:00"
 }]
 ```
@@ -57,12 +57,12 @@ Bulk-import employees from a parsed Excel file. Matches the columns in `test_dat
 **Request body** — `list[EmployeeCreate]`
 ```json
 [{
-  "username": "duonglt18",
-  "name": "Lê Tùng Dương",
-  "usercode": "NV001",
+  "username": "vietnh41",
+  "name": "Nguyễn Hoàng Việt",
+  "usercode": "293048",
   "department": "P. TTNT",
-  "ip": "10.221.2.82",
-  "pc_name": "WS-DUONGLT18"
+  "ip": "10.221.2.91",
+  "hostname": "VTN-VIETNH41"
 }]
 ```
 
@@ -73,9 +73,9 @@ Bulk-import employees from a parsed Excel file. Matches the columns in `test_dat
 | `usercode` | string | **yes** | Employee ID code |
 | `department` | string | no | Department name |
 | `ip` | string | no | IP address |
-| `pc_name` | string | no | PC hostname |
+| `hostname` | string | no | PC hostname |
 
-**Response `200`** — `list[EmployeeRead]` (the created records)  
+**Response `200`** — `list[EmployeeRead]` (the created/updated records)  
 **Response `409`** — Duplicate `username`.
 
 ---
@@ -88,11 +88,11 @@ Update a single employee. All fields are optional; only supplied fields are chan
 **Request body** — `EmployeeUpdate`
 ```json
 {
-  "name": "Lê Tùng Dương",
-  "usercode": "NV001",
+  "name": "Nguyễn Hoàng Việt",
+  "usercode": "293048",
   "department": "P. TTNT",
-  "ip": "10.221.2.82",
-  "pc_name": "WS-DUONGLT18"
+  "ip": "10.221.2.91",
+  "hostname": "VTN-VIETNH41"
 }
 ```
 
@@ -121,7 +121,7 @@ PC agent pushes a health check result.
 **Request body** — `HealthCheckCreate`
 ```json
 {
-  "pc_name": "WS-DUONGLT18",
+  "pc_name": "WS-DEV-011",
   "health_result": "OK"
 }
 ```
@@ -135,7 +135,7 @@ PC agent pushes a health check result.
 ```json
 {
   "id": 1,
-  "pc_name": "WS-DUONGLT18",
+  "pc_name": "WS-DEV-011",
   "health_result": "OK",
   "created_at": "2024-01-15T08:30:00"
 }
@@ -158,7 +158,7 @@ PC agent reports token consumption for the current session.
 **Request body** — `TokenUsageCreate`
 ```json
 {
-  "pc_name": "WS-DUONGLT18",
+  "pc_name": "WS-DEV-011",
   "input_tokens": 500,
   "output_tokens": 200,
   "total_tokens": 700
@@ -169,7 +169,7 @@ PC agent reports token consumption for the current session.
 ```json
 {
   "id": 1,
-  "pc_name": "WS-DUONGLT18",
+  "pc_name": "WS-DEV-011",
   "input_tokens": 500,
   "output_tokens": 200,
   "total_tokens": 700,
@@ -193,13 +193,13 @@ Upsert the last-seen timestamp for a PC. Creates on first call, updates `last_ac
 
 **Request body** — `LastActiveCreate`
 ```json
-{ "pc_name": "WS-DUONGLT18" }
+{ "pc_name": "WS-DEV-011" }
 ```
 
 **Response `201`** — `LastActiveRead`
 ```json
 {
-  "pc_name": "WS-DUONGLT18",
+  "pc_name": "WS-DEV-011",
   "last_active_at": "2024-01-15T08:30:00"
 }
 ```
@@ -239,30 +239,53 @@ Aggregate stats used by the dashboard.
 ## Timesheet — Auto (PC agent)
 
 ### POST `/logs/timesheet/auto`
-PC agent pushes an automatic check-in / check-out record.
+PC agent pushes an event-based timesheet record. The server derives `check_in` and `check_out` from the events array.
+
+**Check-in / check-out derivation rules:**
+- `check_in` = earliest timestamp among the first `startup` event and the first `lock` event (whichever comes first)
+- `check_out` = latest `lock` event timestamp; if the last event in the array is `unlock`, `check_out` is set to `"00:00"` (midnight)
 
 **Request body** — `TimesheetAutoCreate`
 ```json
 {
-  "machine_id": "WS-DUONGLT18",
-  "ip": "10.221.2.82",
-  "check_in": "08:12",
-  "check_out": "17:45",
-  "logged_date": "2024-01-15",
-  "status": "present"
+  "date": "2024-01-15",
+  "hostname": "VTN-VIETNH41",
+  "username": "vietnh41",
+  "platform": "win32",
+  "events": [
+    { "type": "startup",  "timestamp": "2024-01-15T08:06:12+07:00" },
+    { "type": "unlock",   "timestamp": "2024-01-15T08:10:00+07:00" },
+    { "type": "lock",     "timestamp": "2024-01-15T12:00:00+07:00" },
+    { "type": "unlock",   "timestamp": "2024-01-15T13:00:00+07:00" },
+    { "type": "lock",     "timestamp": "2024-01-15T17:45:30+07:00" }
+  ]
 }
 ```
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `machine_id` | string | **yes** | PC hostname |
-| `ip` | string | **yes** | PC IP address |
-| `check_in` | string | no | Time string `HH:MM` |
-| `check_out` | string | no | Time string `HH:MM` |
-| `logged_date` | string | **yes** | Date string `YYYY-MM-DD` |
-| `status` | string | no | `present` \| `late` \| `absent` |
+| `date` | string | **yes** | Work date `YYYY-MM-DD` |
+| `hostname` | string | **yes** | PC hostname |
+| `username` | string | **yes** | Windows login username |
+| `platform` | string | no | OS platform string, e.g. `win32` |
+| `events` | array | **yes** | Ordered list of session events |
+| `events[].type` | string | **yes** | `startup` \| `lock` \| `unlock` |
+| `events[].timestamp` | string | **yes** | ISO 8601 with timezone offset, e.g. `2024-01-15T08:06:12+07:00` |
 
 **Response `200`** — `TimesheetAutoRead`
+```json
+{
+  "id": 1,
+  "hostname": "VTN-VIETNH41",
+  "username": "vietnh41",
+  "ip": null,
+  "check_in": "08:06",
+  "check_out": "17:45",
+  "logged_date": "2024-01-15",
+  "status": null,
+  "received_at": "2024-01-15T08:06:20"
+}
+```
 
 ---
 
@@ -276,18 +299,6 @@ List recent automatic timesheet records.
 | `limit` | int | `50` | `500` |
 
 **Response `200`** — `list[TimesheetAutoRead]`
-```json
-[{
-  "id": 1,
-  "machine_id": "WS-DUONGLT18",
-  "ip": "10.221.2.82",
-  "check_in": "08:12",
-  "check_out": "17:45",
-  "logged_date": "2024-01-15",
-  "status": "present",
-  "received_at": "2024-01-15T08:12:05"
-}]
-```
 
 ---
 
@@ -299,7 +310,7 @@ User submits a manual timesheet entry with optional work content.
 **Request body** — `TimesheetManualCreate`
 ```json
 {
-  "username": "duonglt18",
+  "username": "vietnh41",
   "check_in": "08:05",
   "check_out": "17:30",
   "logged_date": "2024-01-15",
@@ -334,7 +345,7 @@ List recent manual timesheet entries.
 ```json
 [{
   "id": 1,
-  "username": "duonglt18",
+  "username": "vietnh41",
   "check_in": "08:05",
   "check_out": "17:30",
   "logged_date": "2024-01-15",
@@ -349,7 +360,12 @@ List recent manual timesheet entries.
 ## Timesheet — Merged
 
 ### GET `/logs/timesheet/merged`
-Joins `timesheet_auto_logs` with `employees` and the most recent `timesheet_manual_logs` entry for the same `username` + `logged_date`. Provides a single unified view per machine per day.
+Returns a unified view of timesheet data per employee per day, merging auto logs with the most recent manual submission. Includes employees who submitted a manual log even if no auto log exists for that day (full outer approach).
+
+**Merge logic:**
+- Primary rows: from `timesheet_auto_logs` grouped by `(username, logged_date)` — `check_in` = `MIN`, `check_out` = `MAX` — joined to `employees` and the latest `timesheet_manual_logs` entry for the same user+date
+- Additional rows: manual-only entries where no auto log exists for that user+date, joined to `employees`
+- Rows where `username` is not found in the `employees` table are excluded
 
 **Query params**
 
@@ -360,23 +376,33 @@ Joins `timesheet_auto_logs` with `employees` and the most recent `timesheet_manu
 **Response `200`** — `list[MergedTimesheetRead]`
 ```json
 [{
-  "id": 1,
-  "machine_id": "WS-DUONGLT18",
-  "ip": "10.221.2.82",
-  "username": "duonglt18",
-  "usercode": "NV001",
-  "name": "Lê Tùng Dương",
+  "id": null,
+  "machine_id": null,
+  "ip": "10.221.2.91",
+  "username": "vietnh41",
+  "usercode": "293048",
+  "name": "Nguyễn Hoàng Việt",
   "department": "P. TTNT",
-  "pc_name": "WS-DUONGLT18",
-  "auto_check_in": "08:12",
+  "hostname": "VTN-VIETNH41",
+  "auto_check_in": "08:06",
   "auto_check_out": "17:45",
   "manual_check_in": "08:05",
   "manual_check_out": "17:30",
   "work_content": "Fix bug hệ thống giám sát.",
   "logged_date": "2024-01-15",
-  "received_at": "2024-01-15T08:12:05"
+  "received_at": "2024-01-15T08:06:20"
 }]
 ```
+
+| Field | Notes |
+|---|---|
+| `id` | Always `null` (aggregated row, no single source ID) |
+| `machine_id` | Always `null` (legacy field, kept for compatibility) |
+| `ip` | From the `employees` table |
+| `hostname` | From the `employees` table |
+| `auto_check_in` / `auto_check_out` | Derived from agent events; `null` for manual-only rows |
+| `manual_check_in` / `manual_check_out` | From the most recent manual submission; `null` if none |
+| `logged_date` | The actual work date (`YYYY-MM-DD`) — use this for date filtering |
 
 ---
 
@@ -385,7 +411,7 @@ Joins `timesheet_auto_logs` with `employees` and the most recent `timesheet_manu
 ### GET `/health`
 Root-level liveness check. No `/api/v1` prefix.
 
-URL: `http://0.0.0.0:8000/health`
+URL: `http://localhost:9122/health`
 
 **Response `200`**
 ```json

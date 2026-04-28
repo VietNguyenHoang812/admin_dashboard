@@ -1,9 +1,24 @@
 {
-  "machine_id": "WS-TECH-042",
-  "IP": "10.123.221.45",
-  "timestamp": "2026-04-18T17:30:00Z",
-  "timesheet_log": {
-    "check_in": "2026-04-17T08:00:00Z",
-    "check_out": "2026-04-17T19:00:00Z"
-  }
+  "date": "2026-04-24",
+  "hostname": "VTN-VIETNH41",
+  "username": "vietnh41",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "startup",
+      "timestamp": "2026-04-24T08:06:02.115+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-04-24T08:26:29.973+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-04-24T08:26:33.743+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-04-24T08:55:12.765+07:00"
+    }
+  ]
 }

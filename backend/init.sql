@@ -33,8 +33,9 @@ CREATE INDEX IF NOT EXISTS ix_timesheet_manual_logs_logged_date ON timesheet_man
 
 CREATE TABLE IF NOT EXISTS timesheet_auto_logs (
     id          SERIAL PRIMARY KEY,
-    machine_id  TEXT        NOT NULL,
-    ip          TEXT        NOT NULL,
+    hostname    TEXT        NOT NULL,
+    username    TEXT,
+    ip          TEXT,
     check_in    TEXT,
     check_out   TEXT,
     logged_date TEXT        NOT NULL,
@@ -42,7 +43,8 @@ CREATE TABLE IF NOT EXISTS timesheet_auto_logs (
     received_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS ix_timesheet_auto_logs_machine_id  ON timesheet_auto_logs (machine_id);
+CREATE INDEX IF NOT EXISTS ix_timesheet_auto_logs_hostname    ON timesheet_auto_logs (hostname);
+CREATE INDEX IF NOT EXISTS ix_timesheet_auto_logs_username    ON timesheet_auto_logs (username);
 CREATE INDEX IF NOT EXISTS ix_timesheet_auto_logs_logged_date ON timesheet_auto_logs (logged_date);
 
 

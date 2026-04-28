@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from dateutil import parser as dtparse
 
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -110,8 +111,40 @@ async def get_netclaw_stats(db: AsyncSession) -> NetclawStats:
 
 # ── Timesheet Auto ──────────────────────────────────────────────────────────
 
+def _derive_checkin_checkout(events: list) -> tuple[str | None, str | None]:
+    """
+    check_in  = earliest of first startup or first lock event
+    check_out = latest lock event; if the last event overall is 'unlock', use midnight ("00:00")
+    """
+    startups = [dtparse.parse(e.timestamp) for e in events if e.type == "startup"]
+    locks    = [dtparse.parse(e.timestamp) for e in events if e.type == "lock"]
+
+    check_in: str | None = None
+    if startups or locks:
+        candidates = startups[:1] + locks[:1]
+        earliest = min(candidates)
+        check_in = earliest.strftime("%H:%M")
+
+    check_out: str | None = None
+    if events and events[-1].type == "unlock":
+        check_out = "00:00"
+    elif locks:
+        check_out = max(locks).strftime("%H:%M")
+
+    return check_in, check_out
+
+
 async def create_timesheet_auto(db: AsyncSession, data: TimesheetAutoCreate) -> TimesheetAutoLog:
-    row = TimesheetAutoLog(**data.model_dump())
+    check_in, check_out = _derive_checkin_checkout(data.events)
+    row = TimesheetAutoLog(
+        hostname=data.hostname,
+        username=data.username,
+        ip=None,
+        check_in=check_in,
+        check_out=check_out,
+        logged_date=data.date,
+        status=None,
+    )
     db.add(row)
     await db.commit()
     await db.refresh(row)
@@ -146,37 +179,51 @@ async def get_timesheet_manual(db: AsyncSession, limit: int = 50) -> list[Timesh
 
 async def get_merged_timesheets(db: AsyncSession, limit: int = 100) -> list[MergedTimesheetRead]:
     sql = text("""
+        -- Auto logs: one row per (username, logged_date), earliest check_in + latest check_out
+        WITH auto_agg AS (
+            SELECT
+                username,
+                logged_date,
+                MIN(check_in)    AS auto_check_in,
+                MAX(check_out)   AS auto_check_out,
+                MAX(received_at) AS received_at
+            FROM timesheet_auto_logs
+            WHERE username IS NOT NULL
+            GROUP BY username, logged_date
+        )
+
         SELECT
-            ta.id,
-            ta.machine_id,
-            ta.ip,
+            NULL::int          AS id,
+            NULL               AS machine_id,
+            e.ip,
             e.username,
             e.usercode,
             e.name,
             e.department,
             e.hostname,
-            ta.check_in        AS auto_check_in,
-            ta.check_out       AS auto_check_out,
+            aa.auto_check_in,
+            aa.auto_check_out,
             tm.check_in        AS manual_check_in,
             tm.check_out       AS manual_check_out,
             tm.work_content,
-            ta.logged_date,
-            ta.received_at
-        FROM timesheet_auto_logs ta
-        LEFT JOIN employees e ON ta.ip = e.ip
+            aa.logged_date,
+            aa.received_at
+        FROM auto_agg aa
+        JOIN employees e ON aa.username = e.username
         LEFT JOIN LATERAL (
             SELECT check_in, check_out, work_content
             FROM timesheet_manual_logs
-            WHERE username = e.username
-              AND logged_date = ta.logged_date
+            WHERE username = aa.username
+              AND logged_date = aa.logged_date
             ORDER BY created_at DESC
             LIMIT 1
         ) tm ON true
 
         UNION ALL
 
+        -- Manual-only: employees who have no auto log that day (one row per user+date, latest entry)
         SELECT
-            NULL               AS id,
+            NULL::int          AS id,
             NULL               AS machine_id,
             e2.ip,
             e2.username,
@@ -191,13 +238,15 @@ async def get_merged_timesheets(db: AsyncSession, limit: int = 100) -> list[Merg
             mo.work_content,
             mo.logged_date,
             mo.created_at      AS received_at
-        FROM timesheet_manual_logs mo
+        FROM (
+            SELECT DISTINCT ON (username, logged_date) *
+            FROM timesheet_manual_logs
+            ORDER BY username, logged_date, created_at DESC
+        ) mo
         JOIN employees e2 ON mo.username = e2.username
         WHERE NOT EXISTS (
-            SELECT 1
-            FROM timesheet_auto_logs ta2
-            JOIN employees ex ON ta2.ip = ex.ip
-            WHERE ex.username = mo.username
+            SELECT 1 FROM timesheet_auto_logs ta2
+            WHERE ta2.username = mo.username
               AND ta2.logged_date = mo.logged_date
         )
 

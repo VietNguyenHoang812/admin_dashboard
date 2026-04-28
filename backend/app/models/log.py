@@ -36,8 +36,9 @@ class TimesheetAutoLog(Base):
     __tablename__ = "timesheet_auto_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    machine_id: Mapped[str] = mapped_column(Text, index=True)
-    ip: Mapped[str] = mapped_column(Text)
+    hostname: Mapped[str] = mapped_column(Text, index=True)
+    username: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    ip: Mapped[str | None] = mapped_column(Text, nullable=True)
     check_in: Mapped[str | None] = mapped_column(Text, nullable=True)
     check_out: Mapped[str | None] = mapped_column(Text, nullable=True)
     logged_date: Mapped[str] = mapped_column(Text, index=True)
