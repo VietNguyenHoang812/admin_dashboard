@@ -17,14 +17,15 @@ CREATE INDEX IF NOT EXISTS ix_employees_ip       ON employees (ip);
 
 
 CREATE TABLE IF NOT EXISTS timesheet_manual_logs (
-    id          SERIAL PRIMARY KEY,
-    username    TEXT        NOT NULL,
-    check_in    TEXT        NOT NULL,
-    check_out   TEXT        NOT NULL,
-    logged_date TEXT        NOT NULL,
-    status      TEXT        NOT NULL,
-    work_content TEXT,
-    created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                SERIAL PRIMARY KEY,
+    username          TEXT        NOT NULL,
+    check_in          TEXT        NOT NULL,
+    check_out         TEXT        NOT NULL,
+    logged_date       TEXT        NOT NULL,
+    status            TEXT        NOT NULL,
+    office_hour_work  TEXT,
+    ot_work           TEXT,
+    created_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS ix_timesheet_manual_logs_username    ON timesheet_manual_logs (username);

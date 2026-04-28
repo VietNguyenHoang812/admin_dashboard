@@ -69,9 +69,12 @@ class TimesheetEvent(BaseModel):
 
 
 class TimesheetAutoCreate(BaseModel):
-    date: str
+    model_config = {"extra": "ignore"}
+
+    logged_date: str
     hostname: str
     username: str
+    ip: str | None = None
     platform: str | None = None
     events: list[TimesheetEvent]
 
@@ -98,7 +101,8 @@ class TimesheetManualCreate(BaseModel):
     check_out: str
     logged_date: str
     status: str
-    work_content: str | None = None
+    office_hour_work: str | None = None
+    ot_work: str | None = None
 
 
 class TimesheetManualRead(BaseModel):
@@ -108,7 +112,8 @@ class TimesheetManualRead(BaseModel):
     check_out: str
     logged_date: str
     status: str
-    work_content: str | None
+    office_hour_work: str | None
+    ot_work: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -129,6 +134,7 @@ class MergedTimesheetRead(BaseModel):
     auto_check_out: str | None
     manual_check_in: str | None
     manual_check_out: str | None
-    work_content: str | None
+    office_hour_work: str | None
+    ot_work: str | None
     logged_date: str
     received_at: datetime

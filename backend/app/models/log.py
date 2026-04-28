@@ -55,5 +55,6 @@ class TimesheetManualLog(Base):
     check_out: Mapped[str] = mapped_column(Text)
     logged_date: Mapped[str] = mapped_column(Text, index=True)
     status: Mapped[str] = mapped_column(Text)
-    work_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    office_hour_work: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ot_work: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())

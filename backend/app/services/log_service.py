@@ -139,10 +139,10 @@ async def create_timesheet_auto(db: AsyncSession, data: TimesheetAutoCreate) -> 
     row = TimesheetAutoLog(
         hostname=data.hostname,
         username=data.username,
-        ip=None,
+        ip=data.ip,
         check_in=check_in,
         check_out=check_out,
-        logged_date=data.date,
+        logged_date=data.logged_date,
         status=None,
     )
     db.add(row)
@@ -205,13 +205,14 @@ async def get_merged_timesheets(db: AsyncSession, limit: int = 100) -> list[Merg
             aa.auto_check_out,
             tm.check_in        AS manual_check_in,
             tm.check_out       AS manual_check_out,
-            tm.work_content,
+            tm.office_hour_work,
+            tm.ot_work AS "ot_work",
             aa.logged_date,
             aa.received_at
         FROM auto_agg aa
         JOIN employees e ON aa.username = e.username
         LEFT JOIN LATERAL (
-            SELECT check_in, check_out, work_content
+            SELECT check_in, check_out, office_hour_work, ot_work
             FROM timesheet_manual_logs
             WHERE username = aa.username
               AND logged_date = aa.logged_date
@@ -235,7 +236,8 @@ async def get_merged_timesheets(db: AsyncSession, limit: int = 100) -> list[Merg
             NULL               AS auto_check_out,
             mo.check_in        AS manual_check_in,
             mo.check_out       AS manual_check_out,
-            mo.work_content,
+            mo.office_hour_work,
+            mo.ot_work AS "ot_work",
             mo.logged_date,
             mo.created_at      AS received_at
         FROM (
