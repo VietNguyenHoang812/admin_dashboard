@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ── Netclaw Health Check ────────────────────────────────────────────────────
@@ -95,6 +95,22 @@ class TimesheetAutoRead(BaseModel):
 
 # ── Timesheet Manual ────────────────────────────────────────────────────────
 
+def _to_iso(v: str) -> str:
+    """DD-MM-YYYY → YYYY-MM-DD for storage."""
+    try:
+        return datetime.strptime(v, "%d-%m-%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        return v
+
+
+def _to_dmy(v: str) -> str:
+    """YYYY-MM-DD → DD-MM-YYYY for API responses."""
+    try:
+        return datetime.strptime(v, "%Y-%m-%d").strftime("%d-%m-%Y")
+    except ValueError:
+        return v
+
+
 class TimesheetManualCreate(BaseModel):
     model_config = {"extra": "ignore", "populate_by_name": True}
 
@@ -105,6 +121,11 @@ class TimesheetManualCreate(BaseModel):
     status: str
     office_hour_work: str | None = Field(None, alias="work_content")
     ot_work: str | None = Field(None, alias="work_content_ot")
+
+    @field_validator("logged_date", mode="before")
+    @classmethod
+    def parse_logged_date(cls, v: str) -> str:
+        return _to_iso(v)
 
 
 class TimesheetManualRead(BaseModel):
@@ -119,6 +140,11 @@ class TimesheetManualRead(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("logged_date", mode="after")
+    @classmethod
+    def format_logged_date(cls, v: str) -> str:
+        return _to_dmy(v)
 
 
 # ── Merged Timesheet ────────────────────────────────────────────────────────
@@ -140,3 +166,8 @@ class MergedTimesheetRead(BaseModel):
     ot_work: str | None
     logged_date: str
     received_at: datetime
+
+    @field_validator("logged_date", mode="after")
+    @classmethod
+    def format_logged_date(cls, v: str) -> str:
+        return _to_dmy(v)

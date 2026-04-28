@@ -313,7 +313,7 @@ User submits a manual timesheet entry with optional work content. Unknown extra 
   "username": "vietnh41",
   "check_in": "08:05",
   "check_out": "17:30",
-  "logged_date": "2024-01-15",
+  "logged_date": "15-01-2024",
   "status": "present",
   "work_content": "Fix bug hệ thống giám sát.",
   "work_content_ot": "Deploy extra feature."
@@ -325,7 +325,7 @@ User submits a manual timesheet entry with optional work content. Unknown extra 
 | `username` | string | **yes** | |
 | `check_in` | string | **yes** | `HH:MM` |
 | `check_out` | string | **yes** | `HH:MM` |
-| `logged_date` | string | **yes** | `YYYY-MM-DD` |
+| `logged_date` | string | **yes** | `DD-MM-YYYY` |
 | `status` | string | **yes** | `present` \| `late` \| `absent` |
 | `work_content` | string | no | Stored as `office_hour_work` |
 | `work_content_ot` | string | no | Stored as `ot_work` |
@@ -350,7 +350,7 @@ List recent manual timesheet entries.
   "username": "vietnh41",
   "check_in": "08:05",
   "check_out": "17:30",
-  "logged_date": "2024-01-15",
+  "logged_date": "15-01-2024",
   "status": "present",
   "office_hour_work": "Fix bug hệ thống giám sát.",
   "ot_work": "Deploy extra feature.",
@@ -393,7 +393,7 @@ Returns a unified view of timesheet data per employee per day, merging auto logs
   "manual_check_out": "17:30",
   "office_hour_work": "Fix bug hệ thống giám sát.",
   "ot_work": "Deploy extra feature.",
-  "logged_date": "2024-01-15",
+  "logged_date": "15-01-2024",
   "received_at": "2024-01-15T08:06:20"
 }]
 ```
@@ -408,7 +408,7 @@ Returns a unified view of timesheet data per employee per day, merging auto logs
 | `manual_check_in` / `manual_check_out` | From the most recent manual submission; `null` if none |
 | `office_hour_work` | Regular-hours work content from the manual log; `null` if none |
 | `ot_work` | Overtime work content from the manual log; `null` if none |
-| `logged_date` | The actual work date (`YYYY-MM-DD`) — use this for date filtering |
+| `logged_date` | The actual work date (`DD-MM-YYYY`) — use this for date filtering |
 
 ---
 
