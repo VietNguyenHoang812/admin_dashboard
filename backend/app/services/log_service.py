@@ -160,12 +160,13 @@ async def create_timesheet_auto(db: AsyncSession, data: TimesheetAutoCreate) -> 
     check_in, check_out = _derive_checkin_checkout(data.events)
     onscreen_time = _compute_onscreen_time(data.events)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
+    username = data.username.lower() if data.username else data.username
 
     stmt = (
         pg_insert(TimesheetAutoLog)
         .values(
             hostname=data.hostname,
-            username=data.username,
+            username=username,
             ip=data.ip,
             check_in=check_in,
             check_out=check_out,
@@ -190,7 +191,7 @@ async def create_timesheet_auto(db: AsyncSession, data: TimesheetAutoCreate) -> 
     await db.commit()
     result = await db.execute(
         select(TimesheetAutoLog)
-        .where(TimesheetAutoLog.username == data.username)
+        .where(TimesheetAutoLog.username == username)
         .where(TimesheetAutoLog.logged_date == data.logged_date)
     )
     return result.scalar_one()
