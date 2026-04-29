@@ -86,6 +86,7 @@ class TimesheetAutoRead(BaseModel):
     ip: str | None
     check_in: str | None
     check_out: str | None
+    onscreen_time: str | None
     logged_date: str
     status: str | None
     received_at: datetime
@@ -160,10 +161,12 @@ class MergedTimesheetRead(BaseModel):
     hostname: str | None
     auto_check_in: str | None
     auto_check_out: str | None
+    onscreen_time: str | None
     manual_check_in: str | None
     manual_check_out: str | None
     office_hour_work: str | None
     ot_work: str | None
+    status: str | None
     logged_date: str
     received_at: datetime
 

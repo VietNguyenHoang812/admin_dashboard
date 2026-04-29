@@ -33,15 +33,17 @@ CREATE INDEX IF NOT EXISTS ix_timesheet_manual_logs_logged_date ON timesheet_man
 
 
 CREATE TABLE IF NOT EXISTS timesheet_auto_logs (
-    id          SERIAL PRIMARY KEY,
-    hostname    TEXT        NOT NULL,
-    username    TEXT,
-    ip          TEXT,
-    check_in    TEXT,
-    check_out   TEXT,
-    logged_date TEXT        NOT NULL,
-    status      TEXT,
-    received_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id            SERIAL PRIMARY KEY,
+    hostname      TEXT        NOT NULL,
+    username      TEXT,
+    ip            TEXT,
+    check_in      TEXT,
+    check_out     TEXT,
+    onscreen_time TEXT,
+    logged_date   TEXT        NOT NULL,
+    status        TEXT,
+    received_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_auto_logs_username_date UNIQUE (username, logged_date)
 );
 
 CREATE INDEX IF NOT EXISTS ix_timesheet_auto_logs_hostname    ON timesheet_auto_logs (hostname);
