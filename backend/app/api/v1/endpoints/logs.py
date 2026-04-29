@@ -93,7 +93,7 @@ async def list_timesheet_manual(
     ),
 )
 async def list_timesheet_merged(
-    limit: int = Query(100, le=500, description="Maximum records to return (max 500)"),
+    limit: int = Query(1000, le=5000, description="Maximum records to return (max 5000)"),
     db: AsyncSession = Depends(get_db),
 ):
     return await get_merged_timesheets(db, limit)
