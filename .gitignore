@@ -16,6 +16,7 @@ node_modules/
 .next/
 .turbo/
 out/
+.pnpm-store/
 
 # Misc
 .DS_Store
