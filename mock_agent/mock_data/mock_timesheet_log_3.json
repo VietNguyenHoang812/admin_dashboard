@@ -1,0 +1,25 @@
+{
+  "logged_date": "2026-05-12",
+  "ip": "10.221.2.93",
+  "hostname": "VTN-HUNGDT02",
+  "username": "hungdt02",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T07:50:44.110+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T12:10:30.540+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T13:05:18.220+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T17:32:09.880+07:00"
+    }
+  ]
+}

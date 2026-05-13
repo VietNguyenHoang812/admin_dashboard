@@ -1,0 +1,33 @@
+{
+  "logged_date": "2026-05-12",
+  "ip": "10.221.2.95",
+  "hostname": "VTN-THUYPN04",
+  "username": "thuypn04",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "startup",
+      "timestamp": "2026-05-12T07:55:00.000+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T12:05:10.780+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T13:00:45.120+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T17:00:30.990+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T17:01:12.340+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T20:30:55.670+07:00"
+    }
+  ]
+}

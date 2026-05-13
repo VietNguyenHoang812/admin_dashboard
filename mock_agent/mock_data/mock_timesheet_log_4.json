@@ -1,0 +1,13 @@
+{
+  "logged_date": "2026-05-12",
+  "ip": "10.221.2.94",
+  "hostname": "VTN-MINHLT03",
+  "username": "minhlt03",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "startup",
+      "timestamp": "2026-05-12T08:02:55.670+07:00"
+    }
+  ]
+}

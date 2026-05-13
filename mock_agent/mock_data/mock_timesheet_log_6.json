@@ -1,0 +1,33 @@
+{
+  "logged_date": "2026-05-12",
+  "ip": "10.221.2.96",
+  "hostname": "VTN-LONGVQ05",
+  "username": "longvq05",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T08:03:12.340+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T09:20:55.780+07:00"
+    },
+    {
+      "type": "startup",
+      "timestamp": "2026-05-12T09:25:11.460+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T12:05:40.120+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T13:00:22.670+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T17:30:15.990+07:00"
+    }
+  ]
+}

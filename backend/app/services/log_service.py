@@ -114,15 +114,16 @@ async def get_netclaw_stats(db: AsyncSession) -> NetclawStats:
 
 def _derive_checkin_checkout(events: list) -> tuple[str | None, str | None]:
     """
-    check_in  = earliest of first startup or first lock event
+    check_in  = earliest of first startup, first unlock, or first lock event
     check_out = last lock event timestamp
     """
     startups = [dtparse.parse(e.timestamp) for e in events if e.type == "startup"]
     locks    = [dtparse.parse(e.timestamp) for e in events if e.type == "lock"]
+    unlocks  = [dtparse.parse(e.timestamp) for e in events if e.type == "unlock"]
 
     check_in: str | None = None
-    if startups or locks:
-        candidates = startups[:1] + locks[:1]
+    if startups or locks or unlocks:
+        candidates = startups[:1] + locks[:1] + unlocks[:1]
         earliest = min(candidates)
         check_in = earliest.strftime("%H:%M")
 
@@ -216,6 +217,7 @@ async def create_timesheet_manual(db: AsyncSession, data: TimesheetManualCreate)
 
     if existing:
         if data.status == "absent":
+            # Always wipe existing entries and replace with absent
             await db.execute(
                 delete(TimesheetManualLog)
                 .where(TimesheetManualLog.username == data.username)
@@ -223,13 +225,28 @@ async def create_timesheet_manual(db: AsyncSession, data: TimesheetManualCreate)
             )
         else:
             existing_statuses = {r.status for r in existing}
-            if len(existing) >= 2:
+
+            if "absent" in existing_statuses:
+                # Case 1: has absent → delete it and insert the new status
+                await db.execute(
+                    delete(TimesheetManualLog)
+                    .where(TimesheetManualLog.username == data.username)
+                    .where(TimesheetManualLog.logged_date == data.logged_date)
+                )
+            elif data.status in existing_statuses:
+                # Cases 2, 3, 4: same status already exists → update in-place
+                existing_row = next(r for r in existing if r.status == data.status)
+                for field, value in data.model_dump(exclude={"username", "logged_date", "status"}).items():
+                    setattr(existing_row, field, value)
+                await db.commit()
+                await db.refresh(existing_row)
+                return existing_row
+            elif len(existing) >= 2:
                 raise HTTPException(status_code=409, detail="Đã có 2 bản ghi cho ngày này, không thể thêm.")
-            if data.status in existing_statuses:
-                raise HTTPException(status_code=409, detail=f"Đã có bản ghi với trạng thái '{data.status}' cho ngày này.")
-            allowed_pair = {"present", "upcode"}
-            if not ({data.status} | existing_statuses).issubset(allowed_pair):
-                raise HTTPException(status_code=409, detail="Chỉ cho phép kết hợp 'present' và 'upcode' trong cùng một ngày.")
+            else:
+                allowed_pair = {"present", "upcode"}
+                if not ({data.status} | existing_statuses).issubset(allowed_pair):
+                    raise HTTPException(status_code=409, detail="Chỉ cho phép kết hợp 'present' và 'upcode' trong cùng một ngày.")
 
     row = TimesheetManualLog(**data.model_dump())
     db.add(row)

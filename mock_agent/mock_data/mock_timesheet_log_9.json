@@ -1,0 +1,25 @@
+{
+  "logged_date": "2026-05-13",
+  "ip": "10.221.2.99",
+  "hostname": "VTN-LANPTT08",
+  "username": "lanptt08",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "startup",
+      "timestamp": "2026-05-13T08:00:00.000+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-13T09:00:00.000+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-13T10:00:00.000+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-13T17:00:00.000+07:00"
+    }
+  ]
+}

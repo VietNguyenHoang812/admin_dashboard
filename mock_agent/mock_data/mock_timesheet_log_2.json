@@ -1,0 +1,25 @@
+{
+  "logged_date": "2026-05-12",
+  "ip": "10.221.2.92",
+  "hostname": "VTN-ANHTV01",
+  "username": "anhtv01",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "startup",
+      "timestamp": "2026-05-12T07:58:14.320+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T12:01:45.100+07:00"
+    },
+    {
+      "type": "unlock",
+      "timestamp": "2026-05-12T13:05:22.880+07:00"
+    },
+    {
+      "type": "lock",
+      "timestamp": "2026-05-12T17:30:05.445+07:00"
+    }
+  ]
+}

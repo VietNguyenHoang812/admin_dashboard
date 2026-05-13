@@ -1,0 +1,13 @@
+{
+  "logged_date": "2026-05-13",
+  "ip": "10.221.2.101",
+  "hostname": "VTN-HIENTT10",
+  "username": "hientt10",
+  "platform": "win32",
+  "events": [
+    {
+      "type": "startup",
+      "timestamp": "2026-05-13T17:30:00.000+07:00"
+    }
+  ]
+}
