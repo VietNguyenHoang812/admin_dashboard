@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.security import require_auth
 from app.schemas.log import (
     HealthCheckCreate, HealthCheckRead,
     TokenUsageCreate, TokenUsageRead,
@@ -40,6 +41,7 @@ async def create_health_check_endpoint(payload: HealthCheckCreate, db: AsyncSess
 async def list_health_checks(
     limit: int = Query(50, le=500, description="Maximum records to return (max 500)"),
     db: AsyncSession = Depends(get_db),
+    _: str = Depends(require_auth),
 ):
     return await get_health_checks(db, limit)
 
@@ -66,6 +68,7 @@ async def create_token_usage_endpoint(payload: TokenUsageCreate, db: AsyncSessio
 async def list_token_usage(
     limit: int = Query(50, le=500, description="Maximum records to return (max 500)"),
     db: AsyncSession = Depends(get_db),
+    _: str = Depends(require_auth),
 ):
     return await get_token_usages(db, limit)
 
@@ -92,7 +95,7 @@ async def upsert_last_active_endpoint(payload: LastActiveCreate, db: AsyncSessio
     summary="List last active",
     description="Return all machines with their last-seen timestamp, ordered by most recent first.",
 )
-async def list_last_active(db: AsyncSession = Depends(get_db)):
+async def list_last_active(db: AsyncSession = Depends(get_db), _: str = Depends(require_auth)):
     return await get_last_actives(db)
 
 
@@ -107,5 +110,5 @@ async def list_last_active(db: AsyncSession = Depends(get_db)):
         "and daily health-check counts for the last 7 days."
     ),
 )
-async def netclaw_stats(db: AsyncSession = Depends(get_db)):
+async def netclaw_stats(db: AsyncSession = Depends(get_db), _: str = Depends(require_auth)):
     return await get_netclaw_stats(db)

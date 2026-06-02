@@ -4,15 +4,29 @@ import os
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
+from datetime import datetime, timedelta, timezone
+
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
+from jose import jwt
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.core.database import Base, get_db
 
+TEST_SECRET = os.environ["SECRET_KEY"]
+
+
+def _make_test_token() -> str:
+    payload = {
+        "sub": "test-admin",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+    }
+    return jwt.encode(payload, TEST_SECRET, algorithm="HS256")
+
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
+
 
 
 @pytest_asyncio.fixture()
@@ -40,6 +54,11 @@ async def client(db_session):
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    token = _make_test_token()
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        headers={"Authorization": f"Bearer {token}"},
+    ) as ac:
         yield ac
     app.dependency_overrides.clear()

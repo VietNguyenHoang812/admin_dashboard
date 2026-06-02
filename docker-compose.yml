@@ -47,14 +47,14 @@ services:
     networks:
       - netclaw
 
-  frontend:
-    image: vietthevarious/netclaw_admin_dashboard-frontend:1.0.0
-    ports:
-      - "9121:3000"
-    depends_on:
-      - backend
-    networks:
-      - netclaw
+  # frontend:
+  #   image: vietthevarious/netclaw_admin_dashboard-frontend:1.0.0
+  #   ports:
+  #     - "9121:3000"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - netclaw
 
   mock_agent:
     profiles:

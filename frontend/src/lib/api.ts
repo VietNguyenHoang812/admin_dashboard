@@ -1,4 +1,11 @@
+import { getToken, clearAuth } from "@/lib/auth";
+
 const BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:9122") + "/api";
+
+function authHeaders(): Record<string, string> {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 // ── Netclaw ─────────────────────────────────────────────────────────────────
 
@@ -108,9 +115,21 @@ export interface EmployeeUpdate {
 
 // ── HTTP helpers ─────────────────────────────────────────────────────────────
 
+function handleAuthError(status: number) {
+  if (status === 401 || status === 403) {
+    clearAuth();
+    if (typeof window !== "undefined") window.location.href = "/login";
+  }
+}
+
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { cache: "no-store", ...init });
+  const res = await fetch(`${BASE}${path}`, {
+    cache: "no-store",
+    ...init,
+    headers: { ...authHeaders(), ...init?.headers },
+  });
   if (!res.ok) {
+    handleAuthError(res.status);
     const body = await res.json().catch(() => ({}));
     const detail = body?.detail;
     const msg = typeof detail === "string" ? detail : (detail ? JSON.stringify(detail) : `${res.status} ${res.statusText}`);
@@ -120,8 +139,13 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 async function fetchEmpty(path: string, init?: RequestInit): Promise<void> {
-  const res = await fetch(`${BASE}${path}`, { cache: "no-store", ...init });
+  const res = await fetch(`${BASE}${path}`, {
+    cache: "no-store",
+    ...init,
+    headers: { ...authHeaders(), ...init?.headers },
+  });
   if (!res.ok) {
+    handleAuthError(res.status);
     const body = await res.json().catch(() => ({}));
     const detail = body?.detail;
     const msg = typeof detail === "string" ? detail : (detail ? JSON.stringify(detail) : `${res.status} ${res.statusText}`);

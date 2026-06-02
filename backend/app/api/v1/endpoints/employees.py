@@ -3,12 +3,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.security import require_auth
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate, EmployeeRead
 from app.services.employee_service import (
     get_all_employees, bulk_create_employees, update_employee, delete_employee,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_auth)])
 
 
 @router.get(

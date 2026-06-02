@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.security import require_auth
 from app.schemas.log import (
     TimesheetAutoCreate, TimesheetAutoRead,
     TimesheetManualCreate, TimesheetManualRead,
@@ -44,6 +45,7 @@ async def ingest_timesheet_auto(payload: TimesheetAutoCreate, db: AsyncSession =
 async def list_timesheet_auto(
     limit: int = Query(50, le=500, description="Maximum records to return (max 500)"),
     db: AsyncSession = Depends(get_db),
+    _: str = Depends(require_auth),
 ):
     return await get_timesheet_auto(db, limit)
 
@@ -61,7 +63,7 @@ async def list_timesheet_auto(
         "`logged_date` is a date string `YYYY-MM-DD`."
     ),
 )
-async def ingest_timesheet_manual(payload: TimesheetManualCreate, db: AsyncSession = Depends(get_db)):
+async def ingest_timesheet_manual(payload: TimesheetManualCreate, db: AsyncSession = Depends(get_db), _: str = Depends(require_auth)):
     return await create_timesheet_manual(db, payload)
 
 
@@ -75,6 +77,7 @@ async def ingest_timesheet_manual(payload: TimesheetManualCreate, db: AsyncSessi
 async def list_timesheet_manual(
     limit: int = Query(50, le=500, description="Maximum records to return (max 500)"),
     db: AsyncSession = Depends(get_db),
+    _: str = Depends(require_auth),
 ):
     return await get_timesheet_manual(db, limit)
 
@@ -95,5 +98,6 @@ async def list_timesheet_manual(
 async def list_timesheet_merged(
     limit: int = Query(1000, le=5000, description="Maximum records to return (max 5000)"),
     db: AsyncSession = Depends(get_db),
+    _: str = Depends(require_auth),
 ):
     return await get_merged_timesheets(db, limit)
