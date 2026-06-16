@@ -63,7 +63,7 @@ async def list_timesheet_auto(
         "`logged_date` is a date string `YYYY-MM-DD`."
     ),
 )
-async def ingest_timesheet_manual(payload: TimesheetManualCreate, db: AsyncSession = Depends(get_db), _: str = Depends(require_auth)):
+async def ingest_timesheet_manual(payload: TimesheetManualCreate, db: AsyncSession = Depends(get_db)):
     return await create_timesheet_manual(db, payload)
 
 

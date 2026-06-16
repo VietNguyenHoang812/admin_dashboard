@@ -1,0 +1,323 @@
+{
+  "info": {
+    "name": "Netclaw Admin Dashboard",
+    "_postman_id": "netclaw-admin-dashboard",
+    "description": "Full API collection. Run '00 - Login' first — the token is saved automatically to the `token` variable and used by all protected requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9122",
+      "description": "Change to https://netmind.viettel.vn/netclaw for production"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "Filled automatically after login"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.access_token) {",
+              "  pm.collectionVariables.set('token', json.access_token);",
+              "  console.log('Token saved:', json.access_token.substring(0, 20) + '...');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "auth", "login"]
+        },
+        "description": "Authenticate and get a JWT token (valid 8 hours). Token is saved automatically to the `token` collection variable."
+      }
+    },
+    {
+      "name": "Netclaw",
+      "item": [
+        {
+          "name": "Stats (dashboard)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/netclaw/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "netclaw", "stats"]
+            },
+            "description": "Aggregate stats: total, running, degraded, stopped machines + daily health-check counts (last 7 days)."
+          }
+        },
+        {
+          "name": "List Health Checks",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/netclaw/health-check?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "netclaw", "health-check"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Push Health Check (agent, no auth)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pc_name\": \"PC-001\",\n  \"health_result\": \"OK\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/netclaw/health-check",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "netclaw", "health-check"]
+            },
+            "description": "No auth required — called by the PC agent."
+          }
+        },
+        {
+          "name": "List Token Usage",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/netclaw/token-usage?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "netclaw", "token-usage"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Push Token Usage (agent, no auth)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pc_name\": \"PC-001\",\n  \"input_tokens\": 1500,\n  \"output_tokens\": 800,\n  \"total_tokens\": 2300\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/netclaw/token-usage",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "netclaw", "token-usage"]
+            }
+          }
+        },
+        {
+          "name": "List Last Active",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/netclaw/last-active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "netclaw", "last-active"]
+            }
+          }
+        },
+        {
+          "name": "Push Last Active (agent, no auth)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pc_name\": \"PC-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/netclaw/last-active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "netclaw", "last-active"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Timesheet",
+      "item": [
+        {
+          "name": "Merged Timesheet",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/logs/timesheet/merged?limit=1000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "logs", "timesheet", "merged"],
+              "query": [{ "key": "limit", "value": "1000" }]
+            },
+            "description": "Joined view: auto + employee + manual timesheet per machine per day."
+          }
+        },
+        {
+          "name": "List Auto Timesheet",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/logs/timesheet/auto?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "logs", "timesheet", "auto"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Push Auto Timesheet (agent, no auth)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logged_date\": \"2026-06-16\",\n  \"hostname\": \"PC-001\",\n  \"username\": \"vietnh41\",\n  \"ip\": \"192.168.1.10\",\n  \"platform\": \"Windows\",\n  \"events\": [\n    { \"type\": \"startup\", \"timestamp\": \"2026-06-16T08:00:00+07:00\" },\n    { \"type\": \"lock\",    \"timestamp\": \"2026-06-16T12:00:00+07:00\" },\n    { \"type\": \"unlock\",  \"timestamp\": \"2026-06-16T13:00:00+07:00\" },\n    { \"type\": \"lock\",    \"timestamp\": \"2026-06-16T17:30:00+07:00\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/logs/timesheet/auto",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "logs", "timesheet", "auto"]
+            }
+          }
+        },
+        {
+          "name": "List Manual Timesheet",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/logs/timesheet/manual?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "logs", "timesheet", "manual"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Submit Manual Timesheet",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"vietnh41\",\n  \"check_in\": \"08:00\",\n  \"check_out\": \"17:30\",\n  \"logged_date\": \"16-06-2026\",\n  \"status\": \"present\",\n  \"work_content\": \"Developed feature X, fixed bug Y\",\n  \"work_content_ot\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/logs/timesheet/manual",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "logs", "timesheet", "manual"]
+            },
+            "description": "`logged_date` format: DD-MM-YYYY. `status`: present | absent | upcode. `work_content` maps to `office_hour_work`, `work_content_ot` maps to `ot_work`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "List Employees",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/employees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "employees"],
+              "query": [{ "key": "search", "value": "", "disabled": true, "description": "Optional: filter by name/username/usercode/department/ip/hostname" }]
+            }
+          }
+        },
+        {
+          "name": "Bulk Import Employees",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"username\": \"vietnh41\",\n    \"name\": \"Hoang Viet\",\n    \"usercode\": \"VT001\",\n    \"department\": \"Engineering\",\n    \"ip\": \"192.168.1.10\",\n    \"hostname\": \"PC-001\"\n  },\n  {\n    \"username\": \"user02\",\n    \"name\": \"Nguyen Van A\",\n    \"usercode\": \"VT002\",\n    \"department\": \"QA\",\n    \"ip\": null,\n    \"hostname\": null\n  }\n]"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/employees/import",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "employees", "import"]
+            },
+            "description": "409 if a username already exists."
+          }
+        },
+        {
+          "name": "Update Employee",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hoang Viet Updated\",\n  \"usercode\": \"VT001\",\n  \"department\": \"Engineering\",\n  \"ip\": \"192.168.1.20\",\n  \"hostname\": \"PC-001-NEW\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/employees/:username",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "employees", ":username"],
+              "variable": [{ "key": "username", "value": "vietnh41" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Employee",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/employees/:username",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "employees", ":username"],
+              "variable": [{ "key": "username", "value": "vietnh41" }]
+            },
+            "description": "Returns 204 on success, 404 if not found."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "No auth required."
+          }
+        }
+      ]
+    }
+  ]
+}
